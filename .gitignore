@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+out/
+.turbo/
+
+# Environment
+.env
+.env.local
+
+# AXL keys — NEVER commit private keys
+packages/agents/shared/axl-keys/*.pem
+axl-keys/
+
+# Go binaries
+packages/axl-go/bin/
+packages/axl-go/axl-agent
+
+# Hardhat
+packages/contracts/cache/
+packages/contracts/artifacts/
+packages/contracts/typechain-types/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Test outputs
+coverage/

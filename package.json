@@ -1,0 +1,31 @@
+{
+  "name": "neuralmesh",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The internet for AI agents — decentralized identity, discovery, communication, execution, and evolution",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "typecheck": "turbo run typecheck",
+    "demo": "node scripts/demo/send-demo-task.js",
+    "agents": "bash scripts/demo/run-all-agents.sh",
+    "setup": "bash scripts/setup/00-check-deps.sh && tsx scripts/setup/04-deploy-contracts.ts"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3",
+    "tsx": "^4.19.2",
+    "@types/node": "^22.10.7",
+    "prettier": "^3.4.2"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@9.15.4"
+}
