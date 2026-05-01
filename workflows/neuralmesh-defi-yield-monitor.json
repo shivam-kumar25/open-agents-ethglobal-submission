@@ -1,0 +1,70 @@
+{
+  "id": "neuralmesh-defi-yield-monitor",
+  "name": "NeuralMesh DeFi Yield Monitor",
+  "description": "Monitors DeFi yields across Aave, Uniswap, and Compound. Triggers researcher agent tasks when yield opportunities are detected.",
+  "version": "1.0.0",
+  "trigger": {
+    "type": "Schedule",
+    "config": {
+      "cron": "0 */1 * * *",
+      "timezone": "UTC"
+    }
+  },
+  "inputs": {
+    "protocols": {
+      "type": "array",
+      "description": "List of DeFi protocols to monitor",
+      "default": ["aave", "uniswap-v3", "compound"]
+    },
+    "yieldThreshold": {
+      "type": "number",
+      "description": "Alert when APY exceeds this percentage",
+      "default": 5.0
+    }
+  },
+  "nodes": [
+    {
+      "id": "fetch-aave-yields",
+      "type": "HttpRequest",
+      "label": "Fetch Aave V3 Yields",
+      "config": {
+        "url": "https://aave-api-v2.aave.com/data/rates-history?reserveId=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&from={{@trigger:Trigger.lookbackTs}}&resolutionInHours=1",
+        "method": "GET"
+      }
+    },
+    {
+      "id": "fetch-llama-yields",
+      "type": "HttpRequest",
+      "label": "Fetch DeFiLlama Yields",
+      "config": {
+        "url": "https://yields.llama.fi/pools",
+        "method": "GET"
+      }
+    },
+    {
+      "id": "analyze-opportunities",
+      "type": "Code",
+      "label": "Find High-Yield Opportunities",
+      "dependsOn": ["fetch-aave-yields", "fetch-llama-yields"],
+      "config": {
+        "code": "const threshold = {{@trigger:Trigger.yieldThreshold}} || 5.0; const pools = ({{@fetch-llama-yields:HttpRequest.body}}.data || []).filter(p => p.apy > threshold).slice(0, 10); return { opportunities: pools, count: pools.length, topApy: pools[0]?.apy || 0 };"
+      }
+    },
+    {
+      "id": "notify-researcher",
+      "type": "HttpRequest",
+      "label": "Trigger Researcher Agent",
+      "dependsOn": ["analyze-opportunities"],
+      "config": {
+        "url": "http://127.0.0.1:9002/api/send",
+        "method": "POST",
+        "headers": { "Content-Type": "application/json" },
+        "body": "{\"dst\": \"{{@check-researcher:HttpRequest.body.pubkey}}\", \"payload\": \"{{@analyze-opportunities:Code.output_b64}}\"}"
+      }
+    }
+  ],
+  "outputs": {
+    "opportunities": "{{@analyze-opportunities:Code.output}}",
+    "notified": "{{@notify-researcher:HttpRequest.success}}"
+  }
+}

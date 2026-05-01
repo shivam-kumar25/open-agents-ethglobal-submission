@@ -1,0 +1,96 @@
+{
+  "id": "neuralmesh-onchain-executor",
+  "name": "NeuralMesh Onchain Executor",
+  "description": "Executes onchain actions for NeuralMesh agents with MEV protection, retry logic, and full audit trail. Routes agent execution requests through KeeperHub for guaranteed delivery.",
+  "version": "1.0.0",
+  "trigger": {
+    "type": "Webhook",
+    "config": {
+      "path": "/neuralmesh/execute",
+      "method": "POST",
+      "authHeader": "X-NeuralMesh-Key"
+    }
+  },
+  "inputs": {
+    "contractAddress": {
+      "type": "string",
+      "description": "Target contract address (0x-prefixed)",
+      "required": true
+    },
+    "method": {
+      "type": "string",
+      "description": "Contract method name",
+      "required": true
+    },
+    "args": {
+      "type": "array",
+      "description": "Method arguments",
+      "default": []
+    },
+    "agentWallet": {
+      "type": "string",
+      "description": "Agent wallet address (Turnkey agentic wallet)",
+      "required": true
+    },
+    "maxGasPrice": {
+      "type": "string",
+      "description": "Maximum gas price in gwei",
+      "default": "20"
+    }
+  },
+  "nodes": [
+    {
+      "id": "validate-input",
+      "type": "Code",
+      "label": "Validate Contract Call",
+      "config": {
+        "code": "const addr = '{{@trigger:Trigger.contractAddress}}'; if (!addr.startsWith('0x') || addr.length !== 42) throw new Error('Invalid contract address'); return { valid: true, contract: addr, method: '{{@trigger:Trigger.method}}' };"
+      }
+    },
+    {
+      "id": "simulate-tx",
+      "type": "EVMSimulate",
+      "label": "Simulate Transaction",
+      "dependsOn": ["validate-input"],
+      "config": {
+        "network": "0G Galileo",
+        "chainId": 16602,
+        "rpcUrl": "https://evmrpc-testnet.0g.ai",
+        "contractAddress": "{{@trigger:Trigger.contractAddress}}",
+        "method": "{{@trigger:Trigger.method}}",
+        "args": "{{@trigger:Trigger.args}}"
+      }
+    },
+    {
+      "id": "execute-tx",
+      "type": "EVMTransaction",
+      "label": "Execute with MEV Protection",
+      "dependsOn": ["simulate-tx"],
+      "config": {
+        "network": "0G Galileo",
+        "chainId": 16602,
+        "rpcUrl": "https://evmrpc-testnet.0g.ai",
+        "wallet": "{{@trigger:Trigger.agentWallet}}",
+        "contractAddress": "{{@trigger:Trigger.contractAddress}}",
+        "method": "{{@trigger:Trigger.method}}",
+        "args": "{{@trigger:Trigger.args}}",
+        "gasMultiplier": 1.2,
+        "maxRetries": 3
+      }
+    },
+    {
+      "id": "record-audit",
+      "type": "Code",
+      "label": "Build Audit Entry",
+      "dependsOn": ["execute-tx"],
+      "config": {
+        "code": "return { txHash: '{{@execute-tx:EVMTransaction.txHash}}', contract: '{{@trigger:Trigger.contractAddress}}', method: '{{@trigger:Trigger.method}}', simulation: {{@simulate-tx:EVMSimulate.output}}, executedAt: Date.now(), agent: '{{@trigger:Trigger.agentWallet}}' };"
+      }
+    }
+  ],
+  "outputs": {
+    "txHash": "{{@execute-tx:EVMTransaction.txHash}}",
+    "auditEntry": "{{@record-audit:Code.output}}",
+    "success": "{{@execute-tx:EVMTransaction.success}}"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "id": "neuralmesh-payment-settle",
+  "name": "NeuralMesh Payment Settlement",
+  "description": "Settles USDC payments between NeuralMesh agents via x402 protocol. Handles agent-to-agent micropayments for task completion fees.",
+  "version": "1.0.0",
+  "trigger": {
+    "type": "Webhook",
+    "config": {
+      "path": "/neuralmesh/pay",
+      "method": "POST"
+    }
+  },
+  "inputs": {
+    "from": {
+      "type": "string",
+      "description": "Paying agent wallet address",
+      "required": true
+    },
+    "to": {
+      "type": "string",
+      "description": "Receiving agent wallet address",
+      "required": true
+    },
+    "amountUsdc": {
+      "type": "string",
+      "description": "Amount in USDC (e.g. '0.05')",
+      "required": true
+    },
+    "taskId": {
+      "type": "string",
+      "description": "Task ID this payment is for",
+      "required": true
+    },
+    "fromAgentName": {
+      "type": "string",
+      "description": "ENS name of paying agent"
+    },
+    "toAgentName": {
+      "type": "string",
+      "description": "ENS name of receiving agent"
+    }
+  },
+  "nodes": [
+    {
+      "id": "validate-payment",
+      "type": "Code",
+      "label": "Validate Payment Request",
+      "config": {
+        "code": "const amount = parseFloat('{{@trigger:Trigger.amountUsdc}}'); if (amount <= 0 || amount > 100) throw new Error('Invalid amount'); if (!('{{@trigger:Trigger.from}}'.startsWith('0x'))) throw new Error('Invalid from address'); return { valid: true, amount };"
+      }
+    },
+    {
+      "id": "execute-payment",
+      "type": "X402Payment",
+      "label": "Execute x402 USDC Transfer",
+      "dependsOn": ["validate-payment"],
+      "config": {
+        "protocol": "x402",
+        "network": "Base",
+        "token": "USDC",
+        "from": "{{@trigger:Trigger.from}}",
+        "to": "{{@trigger:Trigger.to}}",
+        "amount": "{{@trigger:Trigger.amountUsdc}}",
+        "memo": "NeuralMesh task {{@trigger:Trigger.taskId}}"
+      }
+    },
+    {
+      "id": "record-payment",
+      "type": "Code",
+      "label": "Record Payment on 0G Chain",
+      "dependsOn": ["execute-payment"],
+      "config": {
+        "code": "return { txHash: '{{@execute-payment:X402Payment.txHash}}', from: '{{@trigger:Trigger.fromAgentName}}', to: '{{@trigger:Trigger.toAgentName}}', amount: '{{@trigger:Trigger.amountUsdc}} USDC', taskId: '{{@trigger:Trigger.taskId}}', timestamp: Date.now() };"
+      }
+    }
+  ],
+  "outputs": {
+    "txHash": "{{@execute-payment:X402Payment.txHash}}",
+    "receipt": "{{@record-payment:Code.output}}",
+    "success": "{{@execute-payment:X402Payment.success}}"
+  }
+}

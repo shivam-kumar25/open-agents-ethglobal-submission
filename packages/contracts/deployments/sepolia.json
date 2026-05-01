@@ -1,0 +1,9 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "NeuralMeshResolver": {
+    "address": "",
+    "deployedAt": "",
+    "deployer": ""
+  }
+}

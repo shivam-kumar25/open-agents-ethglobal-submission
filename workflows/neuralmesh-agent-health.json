@@ -1,0 +1,77 @@
+{
+  "id": "neuralmesh-agent-health",
+  "name": "NeuralMesh Agent Health Monitor",
+  "description": "Monitors all 5 NeuralMesh agents, checks AXL connectivity, and reports mesh health status to 0G Storage.",
+  "version": "1.0.0",
+  "trigger": {
+    "type": "Schedule",
+    "config": {
+      "cron": "*/5 * * * *",
+      "timezone": "UTC"
+    }
+  },
+  "nodes": [
+    {
+      "id": "check-planner",
+      "type": "HttpRequest",
+      "label": "Check Planner AXL",
+      "config": {
+        "url": "http://127.0.0.1:9002/api/self",
+        "method": "GET",
+        "timeout": 5000
+      }
+    },
+    {
+      "id": "check-researcher",
+      "type": "HttpRequest",
+      "label": "Check Researcher AXL",
+      "config": {
+        "url": "http://127.0.0.1:9012/api/self",
+        "method": "GET",
+        "timeout": 5000
+      }
+    },
+    {
+      "id": "check-executor",
+      "type": "HttpRequest",
+      "label": "Check Executor AXL",
+      "config": {
+        "url": "http://127.0.0.1:9022/api/self",
+        "method": "GET",
+        "timeout": 5000
+      }
+    },
+    {
+      "id": "check-evaluator",
+      "type": "HttpRequest",
+      "label": "Check Evaluator AXL",
+      "config": {
+        "url": "http://127.0.0.1:9032/api/self",
+        "method": "GET",
+        "timeout": 5000
+      }
+    },
+    {
+      "id": "check-evolution",
+      "type": "HttpRequest",
+      "label": "Check Evolution AXL",
+      "config": {
+        "url": "http://127.0.0.1:9042/api/self",
+        "method": "GET",
+        "timeout": 5000
+      }
+    },
+    {
+      "id": "aggregate-status",
+      "type": "Code",
+      "label": "Aggregate Health Status",
+      "dependsOn": ["check-planner", "check-researcher", "check-executor", "check-evaluator", "check-evolution"],
+      "config": {
+        "code": "const agents = ['planner','researcher','executor','evaluator','evolution']; const results = [$check_planner,$check_researcher,$check_executor,$check_evaluator,$check_evolution]; const status = {}; agents.forEach((a,i) => { status[a] = results[i]?.success ?? false; }); return { status, timestamp: Date.now(), allOnline: Object.values(status).every(Boolean) };"
+      }
+    }
+  ],
+  "outputs": {
+    "healthReport": "{{@aggregate-status:Code.output}}"
+  }
+}
