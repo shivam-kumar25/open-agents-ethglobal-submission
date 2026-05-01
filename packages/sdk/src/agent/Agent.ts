@@ -65,10 +65,11 @@ export class Agent {
     prompt: string,
     opts?: { model?: string; systemPrompt?: string },
   ): Promise<string> {
-    return this.deps.compute.complete(prompt, {
+    const inferOpts: { model?: string; systemPrompt?: string } = {
       model: opts?.model ?? this.config.model,
-      systemPrompt: opts?.systemPrompt,
-    })
+    }
+    if (opts?.systemPrompt !== undefined) inferOpts.systemPrompt = opts.systemPrompt
+    return this.deps.compute.complete(prompt, inferOpts)
   }
 
   async remember(key: string, value: unknown): Promise<void> {

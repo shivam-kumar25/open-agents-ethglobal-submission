@@ -39,13 +39,14 @@ export class KeeperHub {
       output?: unknown
       executionId?: string
     }
-    return {
+    const result: WorkflowResult = {
       success: data.success ?? true,
-      txHash: data.txHash,
       output: data.output,
       executedAt: Date.now(),
-      executionId: data.executionId,
     }
+    if (data.txHash !== undefined) result.txHash = data.txHash
+    if (data.executionId !== undefined) result.executionId = data.executionId
+    return result
   }
 
   async searchWorkflows(query: string): Promise<Array<{ id: string; name: string; description: string }>> {

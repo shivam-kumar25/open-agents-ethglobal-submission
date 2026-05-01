@@ -1,8 +1,23 @@
-import { createPublicClient, http, type PublicClient } from 'viem'
+import { createPublicClient, createWalletClient, http, type Hex } from 'viem'
 import { sepolia } from 'viem/chains'
-import { getTextRecord, getAddressRecord, setTextRecord } from '@ensdomains/ensjs/public'
-import { createWalletClient } from 'viem'
+import { normalize, namehash } from 'viem/ens'
 import { privateKeyToAccount } from 'viem/accounts'
+
+const ENS_PUBLIC_RESOLVER = '0xE99638b40E4Fff0129D56f03b55b6bbC4BBE49b5' as const
+
+const ENS_RESOLVER_ABI = [
+  {
+    name: 'setText',
+    type: 'function',
+    inputs: [
+      { name: 'node', type: 'bytes32' },
+      { name: 'key', type: 'string' },
+      { name: 'value', type: 'string' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const
 
 export interface AgentENSRecords {
   address: string | null
@@ -17,7 +32,7 @@ export interface AgentENSRecords {
 }
 
 export class ENSResolver {
-  private client: PublicClient
+  private client: ReturnType<typeof createPublicClient>
 
   constructor(private sepoliaRpcUrl: string) {
     this.client = createPublicClient({
@@ -55,7 +70,10 @@ export class ENSResolver {
 
   async getText(ensName: string, key: string): Promise<string | null> {
     try {
-      const result = await getTextRecord(this.client, { name: ensName, key })
+      const result = await this.client.getEnsText({
+        name: normalize(ensName),
+        key,
+      })
       return result ?? null
     } catch {
       return null
@@ -64,8 +82,10 @@ export class ENSResolver {
 
   async getAddress(ensName: string): Promise<string | null> {
     try {
-      const result = await getAddressRecord(this.client, { name: ensName })
-      return result?.value ?? null
+      const result = await this.client.getEnsAddress({
+        name: normalize(ensName),
+      })
+      return result ?? null
     } catch {
       return null
     }
@@ -77,19 +97,20 @@ export class ENSResolver {
     value: string,
     signerKey: string,
   ): Promise<string> {
-    const account = privateKeyToAccount(signerKey as `0x${string}`)
+    const account = privateKeyToAccount(signerKey as Hex)
     const walletClient = createWalletClient({
       account,
       chain: sepolia,
       transport: http(this.sepoliaRpcUrl),
     })
-    const hash = await setTextRecord(walletClient, {
-      name: ensName,
-      key,
-      value,
+    const node = namehash(normalize(ensName))
+    return walletClient.writeContract({
+      address: ENS_PUBLIC_RESOLVER,
+      abi: ENS_RESOLVER_ABI,
+      functionName: 'setText',
+      args: [node, key, value],
       account,
     })
-    return hash
   }
 
   async getAgentRecords(ensName: string): Promise<Record<string, string>> {
@@ -101,7 +122,7 @@ export class ENSResolver {
     const out: Record<string, string> = {}
     for (let i = 0; i < keys.length; i++) {
       const v = results[i]
-      if (v !== null) out[keys[i]!] = v
+      if (v !== null && v !== undefined) out[keys[i]!] = v
     }
     return out
   }

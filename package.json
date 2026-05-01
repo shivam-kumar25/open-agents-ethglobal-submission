@@ -9,9 +9,12 @@
     "test": "turbo run test",
     "clean": "turbo run clean",
     "typecheck": "turbo run typecheck",
-    "demo": "node scripts/demo/send-demo-task.js",
-    "agents": "bash scripts/demo/run-all-agents.sh",
-    "setup": "bash scripts/setup/00-check-deps.sh && tsx scripts/setup/04-deploy-contracts.ts"
+    "check": "tsx scripts/setup/00-check-deps.ts",
+    "keys": "tsx scripts/setup/01-generate-axl-keys.ts",
+    "start:agents": "tsx scripts/demo/run-all-agents.ts",
+    "stop": "tsx scripts/demo/stop-all-agents.ts",
+    "demo": "tsx scripts/demo/send-demo-task.ts",
+    "dashboard": "pnpm --filter @neuralmesh/dashboard dev"
   },
   "workspaces": [
     "packages/*"

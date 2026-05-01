@@ -1,4 +1,6 @@
 export { NeuralMesh } from './NeuralMesh.js'
+export { checkCapabilities, printStartupBanner, warnIfUnavailable } from './agent/CapabilityChecker.js'
+export type { Capabilities, CapabilityReport, MissingCapability } from './agent/CapabilityChecker.js'
 export { Agent } from './agent/Agent.js'
 export type { NeuralMeshConfig, AgentHandle, ServiceHandler } from './agent/AgentConfig.js'
 export type { AgentState } from './agent/AgentState.js'
