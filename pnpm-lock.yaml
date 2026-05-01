@@ -24,6 +24,132 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
+  packages/agents/evaluator:
+    dependencies:
+      '@neuralmesh/agent-shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@neuralmesh/sdk':
+        specifier: workspace:*
+        version: link:../../sdk
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.19.17
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  packages/agents/evolution:
+    dependencies:
+      '@neuralmesh/agent-shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@neuralmesh/sdk':
+        specifier: workspace:*
+        version: link:../../sdk
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.19.17
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  packages/agents/executor:
+    dependencies:
+      '@neuralmesh/agent-shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@neuralmesh/sdk':
+        specifier: workspace:*
+        version: link:../../sdk
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.19.17
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  packages/agents/planner:
+    dependencies:
+      '@neuralmesh/agent-shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@neuralmesh/sdk':
+        specifier: workspace:*
+        version: link:../../sdk
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.19.17
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  packages/agents/researcher:
+    dependencies:
+      '@neuralmesh/agent-shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@neuralmesh/sdk':
+        specifier: workspace:*
+        version: link:../../sdk
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.19.17
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  packages/agents/shared:
+    dependencies:
+      '@neuralmesh/sdk':
+        specifier: workspace:*
+        version: link:../../sdk
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.6.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.19.17
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   packages/contracts:
     dependencies:
       '@openzeppelin/contracts':
@@ -105,7 +231,7 @@ importers:
     dependencies:
       '@0glabs/0g-serving-broker':
         specifier: ^0.2.0
-        version: 0.2.14(@types/circomlibjs@0.1.6)(@types/crypto-js@4.2.2)(bufferutil@4.1.0)(circomlibjs@0.1.7(bufferutil@4.1.0)(utf-8-validate@5.0.10))(crypto-js@4.2.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(rollup@4.60.2)(tslib@2.7.0)(typechain@8.3.2(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@5.0.10)(ws@8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)
+        version: 0.2.14(@types/circomlibjs@0.1.6)(@types/crypto-js@4.2.2)(bufferutil@4.1.0)(circomlibjs@0.1.7(bufferutil@4.1.0)(utf-8-validate@5.0.10))(crypto-js@4.2.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(rollup@4.60.2)(tslib@2.7.0)(typechain@8.3.2(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@5.0.10)(ws@8.20.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)
       '@0glabs/0g-ts-sdk':
         specifier: ^0.3.1
         version: 0.3.3(bufferutil@4.1.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
@@ -117,7 +243,7 @@ importers:
         version: 6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       openai:
         specifier: ^4.80.0
-        version: 4.104.0(ws@8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)
+        version: 4.104.0(ws@8.20.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)
       viem:
         specifier: ^2.21.55
         version: 2.48.6(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -4133,7 +4259,7 @@ packages:
 
 snapshots:
 
-  '@0glabs/0g-serving-broker@0.2.14(@types/circomlibjs@0.1.6)(@types/crypto-js@4.2.2)(bufferutil@4.1.0)(circomlibjs@0.1.7(bufferutil@4.1.0)(utf-8-validate@5.0.10))(crypto-js@4.2.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(rollup@4.60.2)(tslib@2.7.0)(typechain@8.3.2(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@5.0.10)(ws@8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)':
+  '@0glabs/0g-serving-broker@0.2.14(@types/circomlibjs@0.1.6)(@types/crypto-js@4.2.2)(bufferutil@4.1.0)(circomlibjs@0.1.7(bufferutil@4.1.0)(utf-8-validate@5.0.10))(crypto-js@4.2.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(rollup@4.60.2)(tslib@2.7.0)(typechain@8.3.2(typescript@5.9.3))(typescript@5.9.3)(utf-8-validate@5.0.10)(ws@8.20.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)':
     dependencies:
       '@ethersproject/bytes': 5.8.0
       '@ethersproject/keccak256': 5.8.0
@@ -4164,7 +4290,7 @@ snapshots:
       express: 5.1.0
       node-fetch: 3.3.2
       open-jsonrpc-provider: 0.2.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
-      openai: 4.104.0(ws@8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)
+      openai: 4.104.0(ws@8.20.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)
       rollup-plugin-polyfill-node: 0.13.0(rollup@4.60.2)
     transitivePeerDependencies:
       - bufferutil
@@ -7505,7 +7631,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  openai@4.104.0(ws@8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76):
+  openai@4.104.0(ws@8.20.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76):
     dependencies:
       '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13
@@ -7515,7 +7641,7 @@ snapshots:
       formdata-node: 4.4.1
       node-fetch: 2.7.0
     optionalDependencies:
-      ws: 8.18.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      ws: 8.20.0(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       zod: 3.25.76
     transitivePeerDependencies:
       - encoding

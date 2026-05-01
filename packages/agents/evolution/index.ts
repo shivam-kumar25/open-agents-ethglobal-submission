@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { createBaseAgent } from '../shared/agent-base.js'
+import { createBaseAgent } from '@neuralmesh/agent-shared'
 import { config } from './config.js'
 import { startEvolution } from './evolution.js'
 

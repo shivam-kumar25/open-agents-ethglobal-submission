@@ -112,71 +112,85 @@ Then open `.env` in a text editor. The only required field to get started is:
 ```
 SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY_HERE
 ```
-Get a free key at [dashboard.alchemy.com](https://dashboard.alchemy.com). Everything else is optional for the basic demo — agents will tell you what's missing.
+Get a free key at [dashboard.alchemy.com](https://dashboard.alchemy.com). Everything else is optional for the basic demo — agents will tell you what's missing and where to get it.
 
 ---
 
-### Step 3 — Generate AXL identity keys
+### Step 3 — Check dependencies
 
 ```bash
-bash scripts/setup/01-generate-axl-keys.sh
+pnpm check
+```
+
+Expected output: a checklist showing Node.js, pnpm, Go, tsx, .env, and AXL keys. Fix anything marked with ✗ before continuing.
+
+---
+
+### Step 4 — Generate AXL identity keys
+
+```bash
+pnpm keys
 ```
 
 Expected output:
 ```
-✓ Generated planner.pem
-✓ Generated researcher.pem
-✓ Generated executor.pem
-✓ Generated evaluator.pem
-✓ Generated evolution.pem
-All AXL keys generated in packages/agents/shared/axl-keys
+╔══════════════════════════════════════════════════════════════╗
+║         NeuralMesh — Generating AXL Identity Keys           ║
+╚══════════════════════════════════════════════════════════════╝
+
+  ✓  planner.pem    ─── generated
+  ✓  researcher.pem ─── generated
+  ✓  executor.pem   ─── generated
+  ✓  evaluator.pem  ─── generated
+  ✓  evolution.pem  ─── generated
 ```
 
-These are private keys for each agent's peer-to-peer identity. They're in `.gitignore` — they stay on your machine.
+These are private keys for each agent's peer-to-peer identity. They're in `.gitignore` — they stay on your machine. Uses Node.js built-in crypto — no openssl or WSL required.
 
 ---
 
-### Step 4 — Build all packages
+### Step 5 — Build all packages
 
 ```bash
 pnpm build
 ```
 
-Expected output: `Tasks: X successful` with no errors. This compiles TypeScript for all packages.
+Expected output: `Tasks: 8 successful` with no errors. This compiles TypeScript for all packages — SDK, shared, all 5 agents, and the dashboard.
 
 ---
 
-### Step 5 — Start all 5 agents
+### Step 6 — Start all 5 agents
 
 ```bash
-bash scripts/demo/run-all-agents.sh
+pnpm start:agents
 ```
 
 Expected output:
 ```
-NeuralMesh — Starting all 5 agents
-===================================
-Starting planner...
-  PID: 12345 | Log: logs/planner.log
-Starting researcher...
-  PID: 12346 | Log: logs/researcher.log
-Starting executor...
-  PID: 12347 | Log: logs/executor.log
-Starting evaluator...
-  PID: 12348 | Log: logs/evaluator.log
-Starting evolution...
-  PID: 12349 | Log: logs/evolution.log
+╔══════════════════════════════════════════════════════════════╗
+║         NeuralMesh — Starting All 5 Agents                  ║
+╚══════════════════════════════════════════════════════════════╝
 
-All 5 agents started.
+  ✓  planner      PID: 12345   │ Port: :9002 │ Orchestrator
+  ✓  researcher   PID: 12346   │ Port: :9012 │ Knowledge agent
+  ✓  executor     PID: 12347   │ Port: :9022 │ Action agent
+  ✓  evaluator    PID: 12348   │ Port: :9032 │ Quality agent
+  ✓  evolution    PID: 12349   │ Port: :9042 │ Meta-agent
 ```
 
 Each agent prints a startup capability report to its log file. Check one:
+
 ```bash
+# Mac / Linux
 tail -f logs/planner.log
+
+# Windows PowerShell
+Get-Content logs/planner.log -Wait
 ```
 
 You'll see something like:
-```
+
+```text
 ╔════════════════════════════════════════════════════════════╗
 ║  NeuralMesh Agent                                          ║
 ║  planner.neuralmesh.eth                                    ║
@@ -203,12 +217,13 @@ This tells you exactly what works and what's missing. The agent still runs — i
 ### Open the Dashboard
 
 ```bash
-pnpm --filter @neuralmesh/dashboard dev
+pnpm dashboard
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 You'll see:
+
 - All 5 agents with green/gray online indicators
 - A task submission box (type a question, click Submit)
 - A live mesh topology diagram showing how agents are connected
@@ -216,10 +231,10 @@ You'll see:
 
 ---
 
-### Send a Demo Task (CLI version)
+### Send a Demo Task
 
 ```bash
-pnpm tsx scripts/demo/send-demo-task.ts
+pnpm demo
 ```
 
 Or use the dashboard's task box — type your question and click "Submit to Planner".
@@ -229,7 +244,7 @@ Or use the dashboard's task box — type your question and click "Submit to Plan
 ### Stop All Agents
 
 ```bash
-bash scripts/demo/stop-all-agents.sh
+pnpm stop
 ```
 
 ---
@@ -238,7 +253,7 @@ bash scripts/demo/stop-all-agents.sh
 
 When you submit a question like "What are the best DeFi yields for USDC?", here's what happens in about 10–20 seconds:
 
-```
+```text
 14:23:01  planner received task from you
           Running inference to understand the question...
           Breaking it into subtasks: [research yields, set up monitor]
@@ -272,43 +287,54 @@ When the researcher hits 50 tasks, evolution.neuralmesh.eth triggers automatic A
 
 ## Setting Up More Features
 
-The agents tell you what's missing. Here's where to get each thing:
+The agents tell you what's missing at startup. Here's where to get each thing:
 
 ### 0G Compute — AI Inference
+
 Agents need this to think.
+
 1. Go to [compute-marketplace.0g.ai](https://compute-marketplace.0g.ai)
 2. Connect your wallet
 3. Copy your API key and service URL
 4. Add to `.env`:
-   ```
+
+   ```env
    ZG_SERVICE_URL=https://...
    ZG_COMPUTE_API_KEY=your_key
    ```
-5. Restart agents: `bash scripts/demo/stop-all-agents.sh && bash scripts/demo/run-all-agents.sh`
+
+5. Restart agents: `pnpm stop && pnpm start:agents`
 
 ### 0G Storage — Agent Memory
+
 Agents need this to remember things across restarts.
-```
+
+```env
 ZG_STORAGE_NODE_URL=https://...    # for file uploads
 ZG_STORAGE_KV_NODE_URL=https://... # for key-value reads (DIFFERENT endpoint!)
 ```
-Note: These are two different endpoints. Both are required.
+
+Note: These are two different endpoints. Both are required for full memory.
 
 ### KeeperHub — Blockchain Execution and Payments
+
 Agents need this to execute blockchain transactions and pay each other.
+
 1. Go to [app.keeperhub.com](https://app.keeperhub.com)
 2. Settings → API Keys → Create new key
 3. Add to `.env`: `KEEPERHUB_API_KEY=your_key`
 
 ### Wallet + 0G Chain — On-chain Identity
+
 Agents need this for iNFT identity and USDC earnings.
+
 1. Create a new EVM wallet (MetaMask, Rabby, etc.)
 2. Get testnet tokens at [faucet.0g.ai](https://faucet.0g.ai)
 3. Add to `.env`:
-   ```
+
+   ```env
    PRIVATE_KEY=0x...
    ZG_RPC_URL=https://evmrpc-testnet.0g.ai
-   ZG_CHAIN_ID=16602
    ```
 
 ---
@@ -335,7 +361,6 @@ Should return a list including the other 4 agents.
 
 ### Check 3 — ENS resolution works
 ```bash
-# If you've registered the ENS names:
 pnpm tsx -e "
   import { ENSResolver } from './packages/sdk/src/index.ts'
   const ens = new ENSResolver(process.env.SEPOLIA_RPC_URL)
@@ -358,15 +383,16 @@ Visit the 0G Galileo explorer:
 
 | Requirement | Version | Why |
 |-------------|---------|-----|
-| Node.js | >= 22 | Required by 0G fine-tuning CLI |
-| Go | 1.25.x (NOT 1.26+) | gVisor build tag conflict in 1.26 |
+| Node.js | >= 22 | Required by all TypeScript packages and 0G fine-tuning |
+| Go | 1.25.x (NOT 1.26+) | gVisor build tag conflict in Go 1.26 breaks the AXL binary |
 | pnpm | >= 9.15.4 | Workspace management |
-| openssl | any | ed25519 key generation for AXL |
 
-Check all requirements:
+Check all requirements at once:
 ```bash
-bash scripts/setup/00-check-deps.sh
+pnpm check
 ```
+
+> No openssl required — AXL keys are generated using Node.js built-in `crypto`. Works on Windows, Mac, and Linux without any extra tools.
 
 ---
 
@@ -384,11 +410,11 @@ neuralmesh/
 │       ├── executor/       Blockchain execution agent
 │       ├── evaluator/      Quality scoring agent
 │       ├── evolution/      Fine-tuning management agent
-│       └── shared/         Types shared across all agents
+│       └── shared/         Startup logic and types shared across agents
 │   └── dashboard/          React web UI
 ├── workflows/              KeeperHub workflow definitions (5 files)
 ├── scripts/
-│   ├── setup/              Dependency checks, key generation
+│   ├── setup/              Dependency checks (00), key generation (01)
 │   └── demo/               Start agents, stop agents, send demo task
 ├── docs/
 │   └── FEEDBACK.md         KeeperHub integration feedback
@@ -466,7 +492,7 @@ This project was built using spec-driven development with Claude Code (claude-so
 - TypeScript SDK implementation (NeuralMesh.create(), agent factories, type system)
 - React dashboard components
 - Hardhat deployment scripts
-- Shell scripts for setup and demo
+- Cross-platform setup scripts (TypeScript, no bash required)
 
 **What the human designed:**
 - The core architecture: ENS as AXL service registry (novel primitive)

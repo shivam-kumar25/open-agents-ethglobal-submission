@@ -32,41 +32,48 @@ export async function createBaseAgent(
   // Step 2: Print the startup banner (shows green/red for each capability)
   printStartupBanner(overrides.name, report)
 
-  // Step 3: Build config — use empty strings for missing values so agents
-  //         start in degraded mode instead of crashing
+  // Step 3: Build required fields first (exactOptionalPropertyTypes: optional fields
+  // cannot be assigned string | undefined — they must be set conditionally)
   const config: NeuralMeshConfig = {
+    name: overrides.name,
+    axlApiPort: overrides.axlApiPort,
+    axlKeyPath: overrides.axlKeyPath,
+    capabilities: overrides.capabilities ?? [],
+    model: overrides.model ?? 'qwen/qwen-2.5-7b-instruct',
+
     // Wallet (needed for iNFT and ENS writes)
-    privateKey: process.env['PRIVATE_KEY'] ?? '',
-    zgRpcUrl: process.env['ZG_RPC_URL'] ?? 'https://evmrpc-testnet.0g.ai',
+    privateKey: overrides.privateKey ?? process.env['PRIVATE_KEY'] ?? '',
+    zgRpcUrl: overrides.zgRpcUrl ?? process.env['ZG_RPC_URL'] ?? 'https://evmrpc-testnet.0g.ai',
 
     // ENS discovery (needed to find other agents by name)
-    sepoliaRpcUrl: process.env['SEPOLIA_RPC_URL'] ?? 'https://rpc.sepolia.org',
+    sepoliaRpcUrl: overrides.sepoliaRpcUrl ?? process.env['SEPOLIA_RPC_URL'] ?? 'https://rpc.sepolia.org',
 
     // 0G Storage (needed for persistent memory)
-    zgStorageNodeUrl: process.env['ZG_STORAGE_NODE_URL'] ?? '',
-    zgStorageKvNodeUrl: process.env['ZG_STORAGE_KV_NODE_URL'] ?? '',
-
-    // 0G Compute (needed for AI inference)
-    zgComputeProvider: process.env['ZG_COMPUTE_PROVIDER'],
-    zgApiKey: process.env['ZG_COMPUTE_API_KEY'] ?? process.env['ZG_API_KEY'],
-
-    // 0G Fine-tuning (needed for evolution loop)
-    zgFinetuneProvider: process.env['ZG_FINETUNE_PROVIDER'],
+    zgStorageNodeUrl: overrides.zgStorageNodeUrl ?? process.env['ZG_STORAGE_NODE_URL'] ?? '',
+    zgStorageKvNodeUrl: overrides.zgStorageKvNodeUrl ?? process.env['ZG_STORAGE_KV_NODE_URL'] ?? '',
 
     // Contract addresses
-    inftContract: process.env['INFT_CONTRACT'] ?? '0x2700F6A3e505402C9daB154C5c6ab9cAEC98EF1F',
-    registryContract: process.env['NEURALMESH_REGISTRY'] ?? '',
-
-    // KeeperHub (needed for automated workflows and micropayments)
-    keeperhubApiKey: process.env['KEEPERHUB_API_KEY'],
-
-    // Defaults (each agent overrides these)
-    capabilities: [],
-    model: 'qwen/qwen-2.5-7b-instruct',
-
-    // Agent-specific overrides (name, port, key path, etc.)
-    ...overrides,
+    inftContract: overrides.inftContract ?? process.env['INFT_CONTRACT'] ?? '0x2700F6A3e505402C9daB154C5c6ab9cAEC98EF1F',
+    registryContract: overrides.registryContract ?? process.env['NEURALMESH_REGISTRY'] ?? '',
   }
+
+  // Step 4: Add optional fields only when defined.
+  // With exactOptionalPropertyTypes: true, you cannot write `field: undefined` for
+  // an optional field — you must either set it to a real value or omit it entirely.
+  const zgComputeProvider = overrides.zgComputeProvider ?? process.env['ZG_COMPUTE_PROVIDER']
+  if (zgComputeProvider !== undefined) config.zgComputeProvider = zgComputeProvider
+
+  const zgApiKey = overrides.zgApiKey ?? process.env['ZG_COMPUTE_API_KEY'] ?? process.env['ZG_API_KEY']
+  if (zgApiKey !== undefined) config.zgApiKey = zgApiKey
+
+  const zgFinetuneProvider = overrides.zgFinetuneProvider ?? process.env['ZG_FINETUNE_PROVIDER']
+  if (zgFinetuneProvider !== undefined) config.zgFinetuneProvider = zgFinetuneProvider
+
+  const keeperhubApiKey = overrides.keeperhubApiKey ?? process.env['KEEPERHUB_API_KEY']
+  if (keeperhubApiKey !== undefined) config.keeperhubApiKey = keeperhubApiKey
+
+  if (overrides.evolve !== undefined) config.evolve = overrides.evolve
+  if (overrides.evolutionThreshold !== undefined) config.evolutionThreshold = overrides.evolutionThreshold
 
   return NeuralMesh.create(config)
 }

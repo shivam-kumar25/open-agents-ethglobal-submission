@@ -1,6 +1,6 @@
 import type { Agent } from '@neuralmesh/sdk'
 import { FineTuner, ENSResolver, iNFTClient, LoRAManager, LogStore, KeeperHub } from '@neuralmesh/sdk'
-import type { EvolutionAnnouncement } from '../shared/types.js'
+import type { EvolutionAnnouncement } from '@neuralmesh/agent-shared'
 import { config } from './config.js'
 
 export async function startEvolution(agent: Agent): Promise<void> {
