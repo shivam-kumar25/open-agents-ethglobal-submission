@@ -1,0 +1,120 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Background -->
+  <rect width="1280" height="720" fill="#0A0A0A"/>
+
+  <!-- Yellow border -->
+  <rect x="16" y="16" width="1248" height="688" stroke="#FFD60A" stroke-width="6" fill="none"/>
+
+  <!-- ── Left side: wordmark + tagline ── -->
+
+  <!-- Eyebrow label -->
+  <rect x="60" y="68" width="220" height="30" fill="#FFD60A"/>
+  <text x="70" y="89" font-family="'Courier New', monospace" font-size="13" font-weight="700"
+        fill="#000" letter-spacing="2.5">OPEN MESH · SEPOLIA</text>
+
+  <!-- NEURAL -->
+  <text x="55" y="240"
+    font-family="'Arial Black', Impact, sans-serif"
+    font-size="168"
+    font-weight="900"
+    fill="#FFFFFF"
+    letter-spacing="-8">NEURAL</text>
+
+  <!-- / (slash in pink) -->
+  <text x="55" y="390"
+    font-family="'Arial Black', Impact, sans-serif"
+    font-size="90"
+    font-weight="900"
+    fill="#F72585"
+    letter-spacing="0">/</text>
+
+  <!-- MESH -->
+  <text x="110" y="390"
+    font-family="'Arial Black', Impact, sans-serif"
+    font-size="90"
+    font-weight="900"
+    fill="#FFFFFF"
+    letter-spacing="-4">MESH</text>
+
+  <!-- Tagline -->
+  <text x="58" y="450"
+    font-family="'Arial', sans-serif"
+    font-size="22"
+    fill="#999"
+    letter-spacing="0.5">Five agents. They research, pay each other, and evolve on-chain.</text>
+
+  <!-- Sponsor/tech strip -->
+  <rect x="55" y="600" width="520" height="2" fill="#222"/>
+
+  <text x="55" y="635" font-family="'Courier New', monospace" font-size="12" fill="#555" letter-spacing="1.5">BUILT WITH</text>
+
+  <rect x="55" y="650" width="70" height="24" fill="#1A1A2E" rx="2"/>
+  <text x="90" y="667" font-family="'Courier New', monospace" font-size="11" fill="#5298FF" text-anchor="middle" letter-spacing="0.5">ENS</text>
+
+  <rect x="135" y="650" width="80" height="24" fill="#1A1A2E" rx="2"/>
+  <text x="175" y="667" font-family="'Courier New', monospace" font-size="11" fill="#9B5DE5" text-anchor="middle" letter-spacing="0.5">GENSYN</text>
+
+  <rect x="225" y="650" width="100" height="24" fill="#1A1A2E" rx="2"/>
+  <text x="275" y="667" font-family="'Courier New', monospace" font-size="11" fill="#F77F00" text-anchor="middle" letter-spacing="0.5">KEEPERHUB</text>
+
+  <rect x="335" y="650" width="100" height="24" fill="#1A1A2E" rx="2"/>
+  <text x="385" y="667" font-family="'Courier New', monospace" font-size="11" fill="#00B4D8" text-anchor="middle" letter-spacing="0.5">TOKENROUTER</text>
+
+  <!-- ── Right side: mesh visualization ── -->
+  <!-- Nodes centered around (950, 360) -->
+  <!-- planner(950,240) researcher(810,320) executor(1090,320) evaluator(840,450) evolution(1060,450) -->
+
+  <!-- Connections -->
+  <line x1="950" y1="240" x2="810" y2="320" stroke="#FFD60A" stroke-width="2" opacity="0.5"/>
+  <line x1="950" y1="240" x2="1090" y2="320" stroke="#F72585" stroke-width="2" opacity="0.5"/>
+  <line x1="950" y1="240" x2="840" y2="450" stroke="#7B2FBE" stroke-width="1.5" opacity="0.35"/>
+  <line x1="950" y1="240" x2="1060" y2="450" stroke="#06D6A0" stroke-width="1.5" opacity="0.35"/>
+  <line x1="810" y1="320" x2="840" y2="450" stroke="#00B4D8" stroke-width="1.5" opacity="0.45"/>
+  <line x1="1090" y1="320" x2="1060" y2="450" stroke="#F72585" stroke-width="1.5" opacity="0.45"/>
+  <line x1="840" y1="450" x2="1060" y2="450" stroke="#7B2FBE" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Gensyn connections (diamond at top-center) -->
+  <line x1="950" y1="120" x2="950" y2="240" stroke="#9B5DE5" stroke-width="2" opacity="0.5" stroke-dasharray="6 4"/>
+  <line x1="950" y1="120" x2="810" y2="320" stroke="#9B5DE5" stroke-width="1.5" opacity="0.3" stroke-dasharray="6 4"/>
+
+  <!-- Gensyn diamond node -->
+  <rect x="928" y="98" width="44" height="44" fill="#0A0A0A" stroke="#9B5DE5" stroke-width="2.5" stroke-dasharray="4 2" transform="rotate(45 950 120)"/>
+  <text x="950" y="125" font-family="'Arial Black', sans-serif" font-size="16" font-weight="900" fill="#9B5DE5" text-anchor="middle">G</text>
+  <text x="950" y="158" font-family="'Courier New', monospace" font-size="10" fill="#9B5DE5" text-anchor="middle" letter-spacing="1">GENSYN</text>
+
+  <!-- Planner (yellow, largest) -->
+  <circle cx="950" cy="240" r="38" fill="#FFD60A" stroke="#000" stroke-width="4"/>
+  <text x="950" y="248" font-family="'Arial Black', sans-serif" font-size="11" font-weight="900"
+        fill="#000" text-anchor="middle" letter-spacing="0.5">PLANNER</text>
+
+  <!-- Researcher (teal) -->
+  <circle cx="810" cy="320" r="30" fill="#00B4D8" stroke="#000" stroke-width="3.5"/>
+  <text x="810" y="325" font-family="'Arial Black', sans-serif" font-size="9" font-weight="900"
+        fill="#000" text-anchor="middle">RESEARCH</text>
+
+  <!-- Executor (pink) -->
+  <circle cx="1090" cy="320" r="30" fill="#F72585" stroke="#000" stroke-width="3.5"/>
+  <text x="1090" y="325" font-family="'Arial Black', sans-serif" font-size="9" font-weight="900"
+        fill="#000" text-anchor="middle">EXECUTOR</text>
+
+  <!-- Evaluator (purple) -->
+  <circle cx="840" cy="450" r="30" fill="#7B2FBE" stroke="#000" stroke-width="3.5"/>
+  <text x="840" y="455" font-family="'Arial Black', sans-serif" font-size="9" font-weight="900"
+        fill="#fff" text-anchor="middle">EVALUATOR</text>
+
+  <!-- Evolution (green) -->
+  <circle cx="1060" cy="450" r="30" fill="#06D6A0" stroke="#000" stroke-width="3.5"/>
+  <text x="1060" y="455" font-family="'Arial Black', sans-serif" font-size="9" font-weight="900"
+        fill="#000" text-anchor="middle">EVOLUTION</text>
+
+  <!-- Dividing line between left and right -->
+  <line x1="640" y1="60" x2="640" y2="660" stroke="#1C1C1C" stroke-width="2"/>
+
+  <!-- ETHGlobal badge -->
+  <rect x="1100" y="640" width="150" height="36" fill="#111" rx="0"/>
+  <rect x="1100" y="640" width="150" height="36" stroke="#333" stroke-width="1.5" fill="none"/>
+  <text x="1175" y="663" font-family="'Courier New', monospace" font-size="12" fill="#666"
+        text-anchor="middle" letter-spacing="1">ETHGlobal 2026</text>
+
+</svg>

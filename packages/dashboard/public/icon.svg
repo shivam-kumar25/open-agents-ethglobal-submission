@@ -1,0 +1,30 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#0A0A0A"/>
+  <rect x="14" y="14" width="484" height="484" stroke="#FFD60A" stroke-width="7" fill="none"/>
+
+  <!-- connections -->
+  <line x1="256" y1="168" x2="152" y2="234" stroke="#FFD60A" stroke-width="6" opacity="0.6"/>
+  <line x1="256" y1="168" x2="360" y2="234" stroke="#F72585" stroke-width="6" opacity="0.6"/>
+  <line x1="256" y1="168" x2="182" y2="340" stroke="#7B2FBE" stroke-width="4" opacity="0.4"/>
+  <line x1="256" y1="168" x2="330" y2="340" stroke="#06D6A0" stroke-width="4" opacity="0.4"/>
+  <line x1="152" y1="234" x2="182" y2="340" stroke="#00B4D8" stroke-width="4" opacity="0.5"/>
+  <line x1="360" y1="234" x2="330" y2="340" stroke="#F72585" stroke-width="4" opacity="0.5"/>
+  <line x1="182" y1="340" x2="330" y2="340" stroke="#7B2FBE" stroke-width="4" opacity="0.35"/>
+
+  <!-- planner -->
+  <circle cx="256" cy="168" r="52" fill="#FFD60A" stroke="#000" stroke-width="8"/>
+  <!-- researcher -->
+  <circle cx="152" cy="234" r="40" fill="#00B4D8" stroke="#000" stroke-width="7"/>
+  <!-- executor -->
+  <circle cx="360" cy="234" r="40" fill="#F72585" stroke="#000" stroke-width="7"/>
+  <!-- evaluator -->
+  <circle cx="182" cy="340" r="40" fill="#7B2FBE" stroke="#000" stroke-width="7"/>
+  <!-- evolution -->
+  <circle cx="330" cy="340" r="40" fill="#06D6A0" stroke="#000" stroke-width="7"/>
+
+  <!-- "NM" small label at bottom -->
+  <text x="256" y="460"
+    font-family="'Arial Black', Impact, sans-serif"
+    font-size="80" font-weight="900"
+    fill="#FFFFFF" text-anchor="middle" letter-spacing="-4">NM</text>
+</svg>

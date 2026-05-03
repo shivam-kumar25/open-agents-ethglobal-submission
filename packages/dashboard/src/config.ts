@@ -6,7 +6,7 @@ export const AGENTS = [
   { name: 'evolution', ensName: 'evolution.neuralmesh.eth', axlApiPath: '/axl-evolution', port: 9042, evolves: false },
 ] as const
 
-export const SEPOLIA_RPC = import.meta.env['VITE_SEPOLIA_RPC_URL'] as string ?? 'https://rpc.sepolia.org'
+export const SEPOLIA_RPC = import.meta.env['VITE_SEPOLIA_RPC_URL'] as string ?? 'https://ethereum-sepolia-rpc.publicnode.com'
 export const EVOLUTION_THRESHOLD = parseInt(import.meta.env['VITE_EVOLUTION_THRESHOLD'] as string ?? '50', 10)
 export const ENS_APP = 'https://app.ens.domains'
 export const SEPOLIA_ETHERSCAN = 'https://sepolia.etherscan.io'

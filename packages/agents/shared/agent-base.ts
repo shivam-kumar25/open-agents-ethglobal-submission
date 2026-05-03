@@ -22,7 +22,7 @@ export async function createBaseAgent(
       ?? 'meta-llama/Llama-3.1-8B-Instruct',
 
     privateKey: overrides.privateKey ?? process.env['PRIVATE_KEY'] ?? '',
-    sepoliaRpcUrl: overrides.sepoliaRpcUrl ?? process.env['SEPOLIA_RPC_URL'] ?? 'https://rpc.sepolia.org',
+    sepoliaRpcUrl: overrides.sepoliaRpcUrl ?? process.env['SEPOLIA_RPC_URL'] ?? 'https://ethereum-sepolia-rpc.publicnode.com',
   }
 
   const tokenrouterApiKey = overrides.tokenrouterApiKey ?? process.env['TOKENROUTER_API_KEY']
