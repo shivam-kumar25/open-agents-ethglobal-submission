@@ -1,4 +1,4 @@
-import type { LogStore } from './LogStore.js'
+import { LocalStore } from './LocalStore.js'
 
 export interface TrainingExample {
   messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>
@@ -6,18 +6,22 @@ export interface TrainingExample {
 
 export class TrainingBuffer {
   private count = 0
-  private buffer: TrainingExample[] = []
+  private store: LocalStore
 
   constructor(
-    private logStore: LogStore,
+    agentName: string,
     private threshold: number,
     private onThresholdReached: () => void,
-  ) {}
+  ) {
+    this.store = new LocalStore(agentName)
+    const saved = this.store.get('training-count')
+    if (typeof saved === 'number') this.count = saved
+  }
 
-  async add(example: TrainingExample): Promise<void> {
-    this.buffer.push(example)
+  add(example: TrainingExample): void {
+    this.store.append('training', example)
     this.count++
-    await this.logStore.append('training', example)
+    this.store.set('training-count', this.count)
     if (this.count >= this.threshold) {
       this.onThresholdReached()
     }
@@ -27,14 +31,8 @@ export class TrainingBuffer {
     return this.count
   }
 
-  async flush(): Promise<string> {
-    const content = this.buffer.map((ex) => JSON.stringify(ex)).join('\n') + '\n'
-    const rootHash = await this.logStore.uploadFile(content, `training-${Date.now()}.jsonl`)
-    return rootHash
-  }
-
-  async reset(): Promise<void> {
-    this.buffer = []
+  reset(): void {
     this.count = 0
+    this.store.set('training-count', 0)
   }
 }

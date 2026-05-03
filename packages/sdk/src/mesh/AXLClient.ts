@@ -24,6 +24,10 @@ export interface AXLTopology {
 export class AXLClient {
   private readonly baseUrl: string
   private recvLoopRunning = false
+  private recvHandlers: Array<(msg: AXLMessage) => void> = []
+  // Pending mcpCall promises keyed by requestId — resolved by the shared recv loop.
+  // This prevents mcpCall's old inline recv() from racing against startRecvLoop.
+  private pendingRequests = new Map<string, (msg: AXLMessage) => void>()
 
   constructor(apiPort: number) {
     this.baseUrl = `http://127.0.0.1:${apiPort}`
@@ -79,20 +83,20 @@ export class AXLClient {
 
   async mcpCall(dstPubkey: string, service: string, args: Record<string, unknown>): Promise<unknown> {
     const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    const envelope = { service, request: args, requestId }
-    await this.send(dstPubkey, envelope)
-    // Wait for response matching requestId
-    const deadline = Date.now() + 30_000
-    while (Date.now() < deadline) {
-      const msg = await this.recv(5_000)
-      if (!msg) continue
-      const p = msg.payload as Record<string, unknown>
-      if (p?.requestId === requestId && p?.response !== undefined) {
-        if (p.error) throw new Error(String(p.error))
-        return p.response
-      }
-    }
-    throw new Error(`AXL MCP call to ${service} timed out`)
+    await this.send(dstPubkey, { service, request: args, requestId })
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pendingRequests.delete(requestId)
+        reject(new Error(`AXL MCP call to ${service} timed out`))
+      }, 30_000)
+      this.pendingRequests.set(requestId, (msg) => {
+        clearTimeout(timer)
+        this.pendingRequests.delete(requestId)
+        const p = msg.payload as Record<string, unknown>
+        if (p.error) reject(new Error(String(p.error)))
+        else resolve(p.response)
+      })
+    })
   }
 
   async gossipPublish(topic: string, data: unknown): Promise<void> {
@@ -125,17 +129,32 @@ export class AXLClient {
     if (!res.ok) throw new Error(`AXL add peer failed: ${res.status}`)
   }
 
+  // Multiple callers (Agent MCP dispatch + GossipSub) share one recv loop.
+  // Adding a second loop causes both to compete for the same messages.
   startRecvLoop(handler: (msg: AXLMessage) => void): () => void {
-    this.recvLoopRunning = true
-    const loop = async () => {
-      while (this.recvLoopRunning) {
-        const msg = await this.recv(10_000)
-        if (msg) {
-          try { handler(msg) } catch (e) { console.error('[AXL recv loop] handler error', e) }
+    this.recvHandlers.push(handler)
+    if (!this.recvLoopRunning) {
+      this.recvLoopRunning = true
+      const loop = async () => {
+        while (this.recvLoopRunning) {
+          const msg = await this.recv(10_000)
+          if (msg) {
+            const p = msg.payload as Record<string, unknown>
+            if (p?.requestId && !p?.service && this.pendingRequests.has(p.requestId as string)) {
+              this.pendingRequests.get(p.requestId as string)!(msg)
+              continue
+            }
+            for (const h of [...this.recvHandlers]) {
+              try { h(msg) } catch (e) { console.error('[AXL recv loop] handler error', e) }
+            }
+          }
         }
       }
+      void loop()
     }
-    void loop()
-    return () => { this.recvLoopRunning = false }
+    return () => {
+      this.recvHandlers = this.recvHandlers.filter((h) => h !== handler)
+      if (this.recvHandlers.length === 0) this.recvLoopRunning = false
+    }
   }
 }

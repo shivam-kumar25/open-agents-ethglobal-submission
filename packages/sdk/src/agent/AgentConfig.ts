@@ -3,7 +3,7 @@ export interface NeuralMeshConfig {
   name: string
   /** e.g. ["research", "analyze"] */
   capabilities: string[]
-  /** 0G Compute model identifier */
+  /** AI model identifier (passed to TokenRouter) */
   model: string
   /** Enable evolution loop (default: false) */
   evolve?: boolean
@@ -13,27 +13,15 @@ export interface NeuralMeshConfig {
   axlKeyPath: string
   /** Wallet private key (hex, 0x-prefixed or raw 32 bytes hex) */
   privateKey: string
-  /** 0G Chain RPC URL */
-  zgRpcUrl: string
-  /** Sepolia RPC URL (ENS always resolves from Sepolia on testnet) */
+  /** Sepolia RPC URL (ENS always resolves from Sepolia) */
   sepoliaRpcUrl: string
-  /** 0G Storage node URL — for file uploads (--indexer flag) */
-  zgStorageNodeUrl: string
-  /** 0G Storage KV node URL — for KV reads (--node flag, different endpoint!) */
-  zgStorageKvNodeUrl: string
-  /** 0G Compute provider address */
-  zgComputeProvider?: string
-  /** Alternative to broker SDK: API key with app-sk-... prefix */
-  zgApiKey?: string
-  /** 0G Fine-tuning provider address */
-  zgFinetuneProvider?: string
+  /** TokenRouter API key */
+  tokenrouterApiKey?: string
+  /** TokenRouter base URL (default: https://api.tokenrouter.com/v1) */
+  tokenrouterBaseUrl?: string
   /** KeeperHub API key */
   keeperhubApiKey?: string
-  /** ERC-7857 iNFT contract address on 0G Galileo */
-  inftContract: string
-  /** NeuralMeshRegistry contract address */
-  registryContract: string
-  /** Number of tasks before triggering fine-tuning (default: 50) */
+  /** Number of tasks before triggering evolution (default: 50) */
   evolutionThreshold?: number
 }
 

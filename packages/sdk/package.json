@@ -8,9 +8,7 @@
   "scripts": { "build": "tsc", "dev": "tsc --watch", "typecheck": "tsc --noEmit" },
   "dependencies": {
     "@ensdomains/ensjs": "^4.0.2",
-    "@0glabs/0g-ts-sdk": "^0.3.1",
-    "@0glabs/0g-serving-broker": "^0.2.0",
-    "openai": "^4.80.0",
+"openai": "^4.80.0",
     "viem": "^2.21.55",
     "ethers": "^6.13.4",
     "zod": "^3.24.1"

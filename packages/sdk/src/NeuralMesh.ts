@@ -7,20 +7,15 @@ import { defaultState } from './agent/AgentState.js'
 import { ENSResolver } from './discovery/ENSResolver.js'
 import { AXLClient } from './mesh/AXLClient.js'
 import { GossipSub } from './mesh/GossipSub.js'
-import { KVStore } from './memory/KVStore.js'
-import { LogStore } from './memory/LogStore.js'
+import { LocalStore } from './memory/LocalStore.js'
 import { TrainingBuffer } from './memory/TrainingBuffer.js'
 import { Compute } from './intelligence/Compute.js'
-import { FineTuner } from './intelligence/FineTuner.js'
-import { LoRAManager } from './intelligence/LoRAManager.js'
 import { KeeperHub } from './execution/KeeperHub.js'
 import { AgenticWallet } from './execution/AgenticWallet.js'
-import { iNFTClient } from './identity/iNFT.js'
-import { Registry } from './identity/Registry.js'
 import { EvolutionLoop } from './evolution/EvolutionLoop.js'
 import { privateKeyToAccount } from 'viem/accounts'
 
-// A dummy key used when PRIVATE_KEY is not set.
+// Dummy key used when PRIVATE_KEY is not set.
 // Lets us build wallet objects without crashing — on-chain calls will fail
 // gracefully with a clear message rather than throwing at startup.
 const ZERO_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
@@ -31,15 +26,12 @@ export class NeuralMesh {
     console.log(`${agentTag} Initializing...`)
 
     // ── Step 1: Start AXL P2P node ────────────────────────────────────────────
-    // AXL is the encrypted peer-to-peer network that agents use to talk to each other.
-    // We spawn it as a subprocess and wait for it to print its public key.
     const axlBinaryPath = process.env['AXL_BINARY_PATH'] ?? findAxlBinary()
     let axlPubkey = 'offline'
     try {
       axlPubkey = await startAxlSubprocess(axlBinaryPath, config)
       console.log(`${agentTag} AXL mesh online. Pubkey: ${axlPubkey.slice(0, 16)}...`)
     } catch (e) {
-      // AXL binary not built yet — agent still starts but can't communicate
       console.warn(
         `${agentTag} AXL startup skipped: ${e instanceof Error ? e.message : e}\n` +
         `            To enable mesh communication: cd packages/axl-go && make build`,
@@ -47,84 +39,39 @@ export class NeuralMesh {
     }
 
     // ── Step 2: Initialize subsystems ────────────────────────────────────────
-    // Each subsystem is independent — if one fails, others still work.
     const axl = new AXLClient(config.axlApiPort)
     const ens = new ENSResolver(config.sepoliaRpcUrl || 'https://rpc.sepolia.org')
+    const store = new LocalStore(config.name)
 
-    // Storage — used for agent memory and training data
-    const kv = new KVStore(
-      config.zgStorageKvNodeUrl,
-      config.zgStorageNodeUrl,
-      config.privateKey,
-      config.name,
-    )
-    const logStore = new LogStore(config.zgStorageNodeUrl, config.privateKey, config.name)
-
-    // Resolve wallet — use dummy key if PRIVATE_KEY not set
+    // Resolve wallet
     const walletKey = (config.privateKey && config.privateKey.length >= 64)
       ? config.privateKey as `0x${string}`
       : ZERO_KEY as `0x${string}`
     const walletAddress = privateKeyToAccount(walletKey).address
     const hasWallet = walletKey !== ZERO_KEY
 
-    // On-chain identity
-    const inft = new iNFTClient(config.inftContract, config.zgRpcUrl, walletKey)
-    const registry = new Registry(config.registryContract, config.zgRpcUrl, walletKey)
+    // AI compute
+    const computeConfig: { apiKey?: string; baseURL?: string } = {}
+    if (config.tokenrouterApiKey !== undefined) computeConfig.apiKey = config.tokenrouterApiKey
+    if (config.tokenrouterBaseUrl !== undefined) computeConfig.baseURL = config.tokenrouterBaseUrl
+    const compute = new Compute(computeConfig)
 
-    // AI inference
-    const computeOpts: { serviceUrl: string; apiKey?: string; provider?: string } = {
-      serviceUrl: process.env['ZG_SERVICE_URL'] ?? 'https://api.0gcompute.ai/v1',
-    }
-    if (config.zgApiKey !== undefined) computeOpts.apiKey = config.zgApiKey
-    if (config.zgComputeProvider !== undefined) computeOpts.provider = config.zgComputeProvider
-    const compute = new Compute(computeOpts)
-
-    // Fine-tuning — for the evolution loop
-    const fineTuner = new FineTuner({
-      provider: config.zgFinetuneProvider ?? '',
-      privateKey: walletKey,
-      zgRpcUrl: config.zgRpcUrl,
-    })
-
-    // KeeperHub — automated workflows and micropayments
+    // KeeperHub — automation and micropayments
     const keeperhub = new KeeperHub({ apiKey: config.keeperhubApiKey ?? '', walletAddress })
     const wallet = new AgenticWallet({ walletAddress, apiKey: config.keeperhubApiKey ?? '' })
 
-    // ── Step 3: iNFT identity (skipped if no wallet) ──────────────────────────
+    // ── Step 3: ENS state ─────────────────────────────────────────────────────
     const state = defaultState(config.name)
     state.axlPubkey = axlPubkey
-    let inftTokenId = 0
 
-    if (hasWallet && config.inftContract && config.registryContract) {
-      try {
-        const agentRecord = await registry.getAgent(walletAddress)
-        inftTokenId = agentRecord.inftTokenId
-        state.inftTokenId = inftTokenId
-        console.log(`${agentTag} iNFT identity loaded. TokenId: ${inftTokenId}`)
-      } catch {
-        // Not registered yet — try to mint
-        try {
-          console.log(`${agentTag} No iNFT found. Minting identity token...`)
-          const metadata = { name: config.name, capabilities: config.capabilities, model: config.model }
-          inftTokenId = await inft.mint(iNFTClient.buildEncryptedURI(metadata), iNFTClient.buildMetadataHash(metadata))
-          state.inftTokenId = inftTokenId
-          console.log(`${agentTag} iNFT minted. TokenId: ${inftTokenId}`)
-        } catch (mintErr) {
-          console.warn(
-            `${agentTag} iNFT mint skipped: ${mintErr instanceof Error ? mintErr.message : mintErr}\n` +
-            `            Ensure NEURALMESH_REGISTRY and INFT_CONTRACT are set and funded.`,
-          )
-        }
-      }
-    } else if (!hasWallet) {
+    if (!hasWallet) {
       console.warn(
-        `${agentTag} On-chain identity skipped: PRIVATE_KEY not set.\n` +
-        `            Add PRIVATE_KEY to .env to enable iNFT identity and USDC earnings.\n` +
-        `            Get testnet funds: https://faucet.0g.ai`,
+        `${agentTag} ENS writes skipped: PRIVATE_KEY not set.\n` +
+        `            Add PRIVATE_KEY to .env to enable reputation tracking on Ethereum.`,
       )
     }
 
-    // ── Step 4: ENS records (skipped if no wallet) ────────────────────────────
+    // ── Step 4: Update ENS records ────────────────────────────────────────────
     if (hasWallet && axlPubkey !== 'offline') {
       try {
         const existing = await ens.getText(config.name, 'axl-pubkey')
@@ -153,33 +100,28 @@ export class NeuralMesh {
     } catch { /* ENS not set up yet — use defaults */ }
 
     // ── Step 6: Wire training buffer and evolution loop ───────────────────────
-    const loraManager = new LoRAManager(logStore, config.inftContract, config.zgRpcUrl, walletKey)
     let evolution: EvolutionLoop | null = null
 
     const trainingBuffer = new TrainingBuffer(
-      logStore,
+      config.name,
       config.evolutionThreshold ?? 50,
       () => {
         console.log(`${agentTag} Training threshold reached! Notifying evolution agent...`)
         if (evolution) void (evolution as unknown as Record<string, () => void>)['runEvolutionCheck']?.()
       },
     )
+
     const gossip = new GossipSub(axl, axlPubkey)
 
-    if (config.evolve && config.zgFinetuneProvider) {
+    if (config.evolve && hasWallet) {
       evolution = new EvolutionLoop({
         agentName: config.name,
         threshold: config.evolutionThreshold ?? 50,
         trainingBuffer,
-        fineTuner,
-        loraManager,
         ens,
-        inft,
         gossip,
         keeperhub,
-        inftTokenId,
         signerKey: walletKey,
-        zgFinetuneProvider: config.zgFinetuneProvider,
       })
       evolution.start()
       console.log(`${agentTag} Evolution loop active (threshold: ${config.evolutionThreshold ?? 50} tasks)`)
@@ -189,8 +131,8 @@ export class NeuralMesh {
     console.log(`${agentTag} Ready. Serving: ${config.capabilities.join(', ') || 'no services yet'}`)
 
     return new Agent(config, state, {
-      ens, axl, gossip, kv, log: logStore, trainingBuffer,
-      compute, fineTuner, keeperhub, wallet, inft, evolution,
+      ens, axl, gossip, store, trainingBuffer,
+      compute, keeperhub, wallet, evolution,
     })
   }
 }

@@ -1,68 +1,41 @@
 import type { Agent } from '@neuralmesh/sdk'
-import { FineTuner, ENSResolver, iNFTClient, LoRAManager, LogStore, KeeperHub } from '@neuralmesh/sdk'
 import type { EvolutionAnnouncement } from '@neuralmesh/agent-shared'
 import { config } from './config.js'
 
 export async function startEvolution(agent: Agent): Promise<void> {
   console.log('[evolution] Ready. Monitoring mesh for evolution triggers...')
 
-  // Handle incoming evolution trigger requests
-  agent.serve('trigger-evolution', async (args, meta) => {
+  // Handle incoming evolution trigger requests (called by KeeperHub workflow)
+  agent.serve('trigger-evolution', async (args, _meta) => {
     const agentName = String(args['agentName'] ?? 'researcher.neuralmesh.eth')
-    const datasetRoot = String(args['datasetRoot'] ?? '')
-    console.log(`[evolution] Evolution triggered for ${agentName}. Dataset: ${datasetRoot}`)
+    const taskCount = Number(args['taskCount'] ?? 0)
+    console.log(`[evolution] Evolution triggered for ${agentName} at ${taskCount} tasks`)
 
-    if (!datasetRoot) return { success: false, error: 'No dataset root provided' }
-
-    const fineTuner = new FineTuner({
-      provider: process.env['ZG_FINETUNE_PROVIDER']!,
-      privateKey: process.env['PRIVATE_KEY']!,
-      zgRpcUrl: process.env['ZG_RPC_URL']!,
-    })
-
-    try {
-      // Full lifecycle: Init → SettingUp → SetUp → Training → Trained → Delivering
-      // → [CRITICAL: acknowledge within 48h] → UserAcknowledged → Finished
-      const { loraRoot, jobId } = await fineTuner.runToCompletion({
-        baseModel: 'Qwen2.5-0.5B-Instruct',
-        datasetRoot,
-        onStatusChange: (status) => {
-          console.log(`[evolution] Fine-tuning ${agentName}: ${status}`)
-          void agent.broadcast('finetune-status', { agentName, status, jobId: '' })
-        },
-      })
-      console.log(`[evolution] Fine-tuning complete for ${agentName}. LoRA: ${loraRoot}`)
-
-      // Announce upgrade via GossipSub
-      const announcement: EvolutionAnnouncement = {
-        agentName,
-        fromVersion: 'v1.0.0',
-        toVersion: 'v1.1.0',
-        loraRoot,
-        inftTokenId: 0,
-        timestamp: Date.now(),
-      }
-      await agent.broadcast('evolution-complete', announcement)
-      await agent.log('evolutions', { ...announcement, jobId })
-
-      return { success: true, loraRoot, jobId }
-    } catch (e) {
-      console.error(`[evolution] Fine-tuning failed for ${agentName}:`, e)
-      return { success: false, error: String(e) }
+    // Broadcast evolution-complete so all agents know about the version bump
+    // (actual ENS version bump is handled by EvolutionLoop in the SDK)
+    const announcement: EvolutionAnnouncement = {
+      agentName,
+      fromVersion: 'v1.0.0',
+      toVersion: 'v1.1.0',
+      timestamp: Date.now(),
     }
+    await agent.broadcast('evolution-complete', announcement)
+    agent.log('evolutions', { ...announcement, taskCount })
+
+    return { success: true, agentName, taskCount }
   })
 
   // Subscribe to threshold-reached broadcasts from other agents
-  await agent.subscribe('training-threshold-reached', async (data, from) => {
-    const d = data as { agentName?: string; datasetRoot?: string }
+  agent.subscribe('training-threshold-reached', async (data, from) => {
+    const d = data as { agentName?: string; taskCount?: number }
     console.log(`[evolution] Threshold reached broadcast from ${from}:`, d)
-    if (d.agentName && d.datasetRoot) {
-      const agentHandle = await agent.find('evolution.neuralmesh.eth')
-      void agentHandle.call('trigger-evolution', { agentName: d.agentName, datasetRoot: d.datasetRoot })
+    if (d.agentName) {
+      const handle = await agent.find('evolution.neuralmesh.eth')
+      void handle.call('trigger-evolution', { agentName: d.agentName, taskCount: d.taskCount ?? 0 })
     }
   })
 
-  // Periodic health check of all mesh agents (Convergecast pattern)
+  // Periodic health check of all mesh agents
   setInterval(async () => {
     try {
       const agents = ['planner', 'researcher', 'executor', 'evaluator']
@@ -77,7 +50,7 @@ export async function startEvolution(agent: Agent): Promise<void> {
           console.warn(`[evolution] Agent ${a} is offline`)
         }
       }
-      await agent.log('health', { statuses, timestamp: Date.now() })
+      agent.log('health', { statuses, timestamp: Date.now() })
       await agent.broadcast('health-status', { statuses, reporter: config.ensName, timestamp: Date.now() })
     } catch (e) {
       console.error('[evolution] Health check failed:', e)

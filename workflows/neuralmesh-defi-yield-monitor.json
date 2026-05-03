@@ -20,6 +20,11 @@
       "type": "number",
       "description": "Alert when APY exceeds this percentage",
       "default": 5.0
+    },
+    "plannerPubkey": {
+      "type": "string",
+      "description": "AXL public key of the planner agent. Get it from: curl http://localhost:9002/api/self | jq .pubkey",
+      "required": true
     }
   },
   "nodes": [
@@ -47,7 +52,7 @@
       "label": "Find High-Yield Opportunities",
       "dependsOn": ["fetch-aave-yields", "fetch-llama-yields"],
       "config": {
-        "code": "const threshold = {{@trigger:Trigger.yieldThreshold}} || 5.0; const pools = ({{@fetch-llama-yields:HttpRequest.body}}.data || []).filter(p => p.apy > threshold).slice(0, 10); return { opportunities: pools, count: pools.length, topApy: pools[0]?.apy || 0 };"
+        "code": "const threshold = {{@trigger:Trigger.yieldThreshold}} || 5.0; const pools = ({{@fetch-llama-yields:HttpRequest.body}}.data || []).filter(p => p.apy > threshold).slice(0, 10); const requestId = `kh-yield-${Date.now()}`; const query = `Analyze these ${pools.length} DeFi yield opportunities with APY > ${threshold}%: ${JSON.stringify(pools.slice(0,3))}`; const payloadB64 = btoa(JSON.stringify({ service: 'plan', request: { query }, requestId })); return { opportunities: pools, count: pools.length, topApy: pools[0]?.apy || 0, payloadB64, requestId };"
       }
     },
     {
@@ -59,7 +64,7 @@
         "url": "http://127.0.0.1:9002/api/send",
         "method": "POST",
         "headers": { "Content-Type": "application/json" },
-        "body": "{\"dst\": \"{{@check-researcher:HttpRequest.body.pubkey}}\", \"payload\": \"{{@analyze-opportunities:Code.output_b64}}\"}"
+        "body": "{\"dst\": \"{{@trigger:Trigger.plannerPubkey}}\", \"payload\": \"{{@analyze-opportunities:Code.output.payloadB64}}\"}"
       }
     }
   ],

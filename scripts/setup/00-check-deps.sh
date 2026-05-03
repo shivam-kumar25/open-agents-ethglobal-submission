@@ -30,16 +30,16 @@ if ! command -v pnpm &>/dev/null; then
 fi
 ok "pnpm $(pnpm --version)"
 
-# Go — version check (MUST be 1.25.x, NOT 1.26+ — gVisor build tag conflict)
+# Go — optional, only needed to build AXL binary; NOT required for agents to run
 GO_VERSION=$(go version 2>/dev/null | awk '{print $3}' | sed 's/go//')
 GO_MAJOR=$(echo "$GO_VERSION" | cut -d. -f1)
 GO_MINOR=$(echo "$GO_VERSION" | cut -d. -f2)
 if [ -z "$GO_VERSION" ]; then
-  fail "Go not found. Install Go 1.25.x: https://go.dev/dl/"
+  warn "Go not found — optional, only needed to build AXL binary. Install Go 1.25.x: https://go.dev/dl/"
 elif [ "$GO_MAJOR" -eq 1 ] && [ "$GO_MINOR" -ge 26 ]; then
-  fail "Go $GO_VERSION found but 1.26+ breaks AXL (gVisor build tag conflict). Use Go 1.25.x. Set: export GOTOOLCHAIN=go1.25.5"
+  warn "Go $GO_VERSION found — 1.26+ breaks AXL gVisor build tags. Use Go 1.25.x: export GOTOOLCHAIN=go1.25.5"
 else
-  ok "Go $GO_VERSION (GOTOOLCHAIN will be set to go1.25.5 for AXL build)"
+  ok "Go $GO_VERSION"
 fi
 
 # git
@@ -47,13 +47,6 @@ if ! command -v git &>/dev/null; then
   fail "git not found"
 fi
 ok "git $(git --version | awk '{print $3}')"
-
-# openssl (needed for AXL key generation)
-if ! command -v openssl &>/dev/null; then
-  warn "openssl not found — needed for AXL key generation"
-else
-  ok "openssl $(openssl version | awk '{print $2}')"
-fi
 
 # .env file
 if [ ! -f .env ]; then

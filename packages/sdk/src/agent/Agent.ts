@@ -3,28 +3,22 @@ import type { AgentState } from './AgentState.js'
 import type { ENSResolver } from '../discovery/ENSResolver.js'
 import type { AXLClient } from '../mesh/AXLClient.js'
 import type { GossipSub } from '../mesh/GossipSub.js'
-import type { KVStore } from '../memory/KVStore.js'
-import type { LogStore } from '../memory/LogStore.js'
+import type { LocalStore } from '../memory/LocalStore.js'
 import type { TrainingBuffer } from '../memory/TrainingBuffer.js'
 import type { Compute } from '../intelligence/Compute.js'
-import type { FineTuner } from '../intelligence/FineTuner.js'
 import type { KeeperHub } from '../execution/KeeperHub.js'
 import type { AgenticWallet } from '../execution/AgenticWallet.js'
-import type { iNFTClient } from '../identity/iNFT.js'
 import type { EvolutionLoop } from '../evolution/EvolutionLoop.js'
 
 export interface AgentDeps {
   ens: ENSResolver
   axl: AXLClient
   gossip: GossipSub
-  kv: KVStore
-  log: LogStore
+  store: LocalStore
   trainingBuffer: TrainingBuffer
   compute: Compute
-  fineTuner: FineTuner
   keeperhub: KeeperHub
   wallet: AgenticWallet
-  inft: iNFTClient
   evolution: EvolutionLoop | null
 }
 
@@ -72,20 +66,20 @@ export class Agent {
     return this.deps.compute.complete(prompt, inferOpts)
   }
 
-  async remember(key: string, value: unknown): Promise<void> {
-    await this.deps.kv.set(key, value)
+  remember(key: string, value: unknown): void {
+    this.deps.store.set(key, value)
   }
 
-  async recall(key: string): Promise<unknown> {
-    return this.deps.kv.get(key)
+  recall(key: string): unknown {
+    return this.deps.store.get(key)
   }
 
-  async log(category: string, data: unknown): Promise<void> {
-    await this.deps.log.append(category, data)
+  log(category: string, data: unknown): void {
+    this.deps.store.append(category, data)
     if (category === 'training' || category === 'tasks') {
       const example = data as { query?: string; result?: unknown }
       if (example.query && example.result) {
-        await this.deps.trainingBuffer.add({
+        this.deps.trainingBuffer.add({
           messages: [
             { role: 'user', content: String(example.query) },
             { role: 'assistant', content: String(example.result) },
@@ -106,11 +100,17 @@ export class Agent {
     return result.txHash ?? ''
   }
 
+  async payAgent(toEnsName: string, amountUsdc: string): Promise<void> {
+    const toRecords = await this.deps.ens.resolve(toEnsName)
+    if (!toRecords.address) throw new Error(`No address found for ${toEnsName}`)
+    await this.deps.wallet.pay(toRecords.address, amountUsdc, `task payment to ${toEnsName}`)
+  }
+
   async broadcast(topic: string, data: unknown): Promise<void> {
     await this.deps.gossip.publish(topic, data)
   }
 
-  async subscribe(topic: string, handler: (data: unknown, from: string) => void): Promise<void> {
+  subscribe(topic: string, handler: (data: unknown, from: string) => void): void {
     this.deps.gossip.subscribe(topic, handler)
   }
 
@@ -124,16 +124,6 @@ export class Agent {
     this.state.reputation = records.reputation
     this.state.taskCount = records.tasks
     this.state.axlPubkey = records.axlPubkey
-    const stored = await this.deps.kv.get('agent-state') as Partial<AgentState> | null
-    if (stored) {
-      this.state.earnings = stored.earnings ?? this.state.earnings
-      this.state.trainingExamples = stored.trainingExamples ?? this.state.trainingExamples
-      this.state.lastEvolution = stored.lastEvolution ?? this.state.lastEvolution
-    }
-  }
-
-  async verifyAuthorization(tokenId: number, executor: string): Promise<boolean> {
-    return this.deps.inft.isAuthorized(tokenId, executor)
   }
 
   private startMCPDispatch(): void {
@@ -157,7 +147,7 @@ export class Agent {
           )
           await this.deps.axl.send(msg.src, { requestId: p.requestId, response: result })
           this.state.taskCount++
-          await this.deps.kv.set('agent-state', this.state)
+          this.deps.store.set('agent-state', this.state)
         } catch (err) {
           await this.deps.axl.send(msg.src, {
             requestId: p.requestId,

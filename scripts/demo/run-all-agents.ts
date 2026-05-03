@@ -31,12 +31,12 @@
  *   The most common reason: missing env vars (the agent will tell you).
  *
  * How to check if it's working:
- *   curl http://localhost:9002/api/self  # should return {"pubkey": "..."}
+ *   curl http://localhost:9003/api/self  # should return {"name": "...", "online": true}
  *   tail -f logs/planner.log            # see live output
  */
 
 import { spawn } from 'node:child_process'
-import { existsSync, mkdirSync, writeFileSync, readFileSync, createWriteStream } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync, readFileSync, openSync, closeSync } from 'node:fs'
 import { join } from 'node:path'
 
 const ROOT = new URL('../../', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')
@@ -145,15 +145,18 @@ for (const agent of AGENTS) {
   const logFile = join(LOGS_DIR, `${agent.name}.log`)
   const pidFile = join(LOGS_DIR, `${agent.name}.pid`)
 
-  const logStream = createWriteStream(logFile, { flags: 'a' })
+  // openSync gives an fd immediately (sync) — createWriteStream's fd is null
+  // until the 'open' event fires, which causes ERR_INVALID_ARG_VALUE in spawn.
+  const logFd = openSync(logFile, 'a')
 
   const proc = spawn(process.execPath, [agent.entryPoint], {
     env: { ...process.env },
-    stdio: ['ignore', logStream, logStream],
+    stdio: ['ignore', logFd, logFd],
     detached: true,
   })
 
-  proc.unref() // Let this process exit without waiting for children
+  closeSync(logFd) // child has its own copy; close the parent's fd
+  proc.unref()     // let this script exit without waiting for agents
 
   writeFileSync(pidFile, String(proc.pid), 'utf8')
 
@@ -170,8 +173,8 @@ console.log('╠═════════════════════�
 console.log('║                                                              ║')
 console.log('║  Give them ~5 seconds to initialize, then check:            ║')
 console.log('║                                                              ║')
-console.log('║  curl http://localhost:9002/api/self  ← planner             ║')
-console.log('║  curl http://localhost:9012/api/self  ← researcher          ║')
+console.log('║  curl http://localhost:9003/api/self  ← planner             ║')
+console.log('║  curl http://localhost:9013/api/self  ← researcher          ║')
 console.log('║                                                              ║')
 console.log('║  Open the dashboard:                                         ║')
 console.log('║    pnpm dashboard                                            ║')

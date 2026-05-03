@@ -27,8 +27,6 @@ export interface AgentENSRecords {
   reputation: number
   tasks: number
   model: string
-  baseModel: string
-  url: string
 }
 
 export class ENSResolver {
@@ -42,7 +40,7 @@ export class ENSResolver {
   }
 
   async resolve(ensName: string): Promise<AgentENSRecords> {
-    const [address, axlPubkey, services, version, reputation, tasks, model, baseModel, url] =
+    const [address, axlPubkey, services, version, reputation, tasks, model] =
       await Promise.all([
         this.getAddress(ensName),
         this.getText(ensName, 'axl-pubkey'),
@@ -51,8 +49,6 @@ export class ENSResolver {
         this.getText(ensName, 'neural-reputation'),
         this.getText(ensName, 'neural-tasks'),
         this.getText(ensName, 'neural-model'),
-        this.getText(ensName, 'neural-base-model'),
-        this.getText(ensName, 'url'),
       ])
 
     return {
@@ -63,8 +59,6 @@ export class ENSResolver {
       reputation: reputation ? parseInt(reputation, 10) : 100,
       tasks: tasks ? parseInt(tasks, 10) : 0,
       model: model ?? '',
-      baseModel: baseModel ?? '',
-      url: url ?? '',
     }
   }
 
@@ -116,7 +110,7 @@ export class ENSResolver {
   async getAgentRecords(ensName: string): Promise<Record<string, string>> {
     const keys = [
       'axl-pubkey', 'axl-services', 'neural-version', 'neural-reputation',
-      'neural-tasks', 'neural-model', 'neural-base-model', 'url',
+      'neural-tasks', 'neural-model',
     ]
     const results = await Promise.all(keys.map((k) => this.getText(ensName, k)))
     const out: Record<string, string> = {}

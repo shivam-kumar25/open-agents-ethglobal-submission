@@ -1,7 +1,7 @@
 {
   "id": "neuralmesh-agent-health",
   "name": "NeuralMesh Agent Health Monitor",
-  "description": "Monitors all 5 NeuralMesh agents, checks AXL connectivity, and reports mesh health status to 0G Storage.",
+  "description": "Monitors all 5 NeuralMesh agents, checks AXL connectivity, and reports mesh health status every 5 minutes.",
   "version": "1.0.0",
   "trigger": {
     "type": "Schedule",
@@ -16,7 +16,7 @@
       "type": "HttpRequest",
       "label": "Check Planner AXL",
       "config": {
-        "url": "http://127.0.0.1:9002/api/self",
+        "url": "http://127.0.0.1:9003/api/self",
         "method": "GET",
         "timeout": 5000
       }
@@ -26,7 +26,7 @@
       "type": "HttpRequest",
       "label": "Check Researcher AXL",
       "config": {
-        "url": "http://127.0.0.1:9012/api/self",
+        "url": "http://127.0.0.1:9013/api/self",
         "method": "GET",
         "timeout": 5000
       }
@@ -36,7 +36,7 @@
       "type": "HttpRequest",
       "label": "Check Executor AXL",
       "config": {
-        "url": "http://127.0.0.1:9022/api/self",
+        "url": "http://127.0.0.1:9023/api/self",
         "method": "GET",
         "timeout": 5000
       }
@@ -46,7 +46,7 @@
       "type": "HttpRequest",
       "label": "Check Evaluator AXL",
       "config": {
-        "url": "http://127.0.0.1:9032/api/self",
+        "url": "http://127.0.0.1:9033/api/self",
         "method": "GET",
         "timeout": 5000
       }
@@ -56,7 +56,7 @@
       "type": "HttpRequest",
       "label": "Check Evolution AXL",
       "config": {
-        "url": "http://127.0.0.1:9042/api/self",
+        "url": "http://127.0.0.1:9043/api/self",
         "method": "GET",
         "timeout": 5000
       }

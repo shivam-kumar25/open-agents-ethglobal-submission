@@ -1,14 +1,13 @@
 {
   "name": "@neuralmesh/contracts",
   "version": "0.1.0",
-  "description": "NeuralMesh on-chain contracts — NeuralMeshRegistry (0G Galileo) and NeuralMeshResolver (ENS Sepolia)",
+  "description": "NeuralMesh on-chain contracts — NeuralMeshResolver (ENS Sepolia custom resolver)",
   "private": true,
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy:registry": "hardhat run scripts/deploy-registry.ts --network galileo",
     "deploy:resolver": "hardhat run scripts/deploy-resolver.ts --network sepolia",
-    "setup": "hardhat run scripts/setup.ts --network galileo",
+    "issue:subnames": "hardhat run scripts/issue-subnames.ts --network sepolia",
     "clean": "hardhat clean"
   },
   "devDependencies": {

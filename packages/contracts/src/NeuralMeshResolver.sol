@@ -21,22 +21,18 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 ///         for this MVP; a LayerZero message could be added later).
 ///
 ///         Implements EIP-137 (ENS resolver) and EIP-2304 (multicoin addr) subset.
+interface IENSRegistry {
+    function owner(bytes32 node) external view returns (address);
+    function setSubnodeOwner(
+        bytes32 node,
+        bytes32 label,
+        address owner
+    ) external returns (bytes32);
+    function setResolver(bytes32 node, address resolver) external;
+    function resolver(bytes32 node) external view returns (address);
+}
+
 contract NeuralMeshResolver is Ownable {
-    // -------------------------------------------------------------------------
-    // Interfaces (inline to avoid extra imports)
-    // -------------------------------------------------------------------------
-
-    interface IENSRegistry {
-        function owner(bytes32 node) external view returns (address);
-        function setSubnodeOwner(
-            bytes32 node,
-            bytes32 label,
-            address owner
-        ) external returns (bytes32);
-        function setResolver(bytes32 node, address resolver) external;
-        function resolver(bytes32 node) external view returns (address);
-    }
-
     // -------------------------------------------------------------------------
     // Constants
     // -------------------------------------------------------------------------
@@ -55,8 +51,8 @@ contract NeuralMeshResolver is Ownable {
     /// @notice The ENS Registry contract (Sepolia: 0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e).
     IENSRegistry public immutable ensRegistry;
 
-    /// @notice Trusted NeuralMeshRegistry address (on 0G Galileo — passed at deploy,
-    ///         not verified across chains in this MVP).
+    /// @notice Trusted authority address — either the deployer or another authorized caller
+    ///         that may issue subnames and update text records.
     address public immutable neuralMeshRegistry;
 
     /// @notice Forward resolution mapping: ENS node → Ethereum address.
@@ -220,7 +216,7 @@ contract NeuralMeshResolver is Ownable {
     ///
     /// @param label     Plain-text DNS label (e.g. "agentbob").
     /// @param subOwner  Address that will own the new subname.
-    /// @param tokenId   ERC-7857 iNFT token ID — stored as a text record.
+    /// @param tokenId   Agent sequential ID (1-5) — stored as a text record.
     /// @param axlPubkey Gensyn AXL P2P public key bytes — stored as a hex text record.
     function issueSubname(
         string calldata label,

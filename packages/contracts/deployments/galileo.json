@@ -1,9 +1,0 @@
-{
-  "network": "galileo",
-  "chainId": 16602,
-  "NeuralMeshRegistry": {
-    "address": "",
-    "deployedAt": "",
-    "deployer": ""
-  }
-}

@@ -67,7 +67,7 @@
     {
       "id": "record-payment",
       "type": "Code",
-      "label": "Record Payment on 0G Chain",
+      "label": "Build Payment Receipt",
       "dependsOn": ["execute-payment"],
       "config": {
         "code": "return { txHash: '{{@execute-payment:X402Payment.txHash}}', from: '{{@trigger:Trigger.fromAgentName}}', to: '{{@trigger:Trigger.toAgentName}}', amount: '{{@trigger:Trigger.amountUsdc}} USDC', taskId: '{{@trigger:Trigger.taskId}}', timestamp: Date.now() };"

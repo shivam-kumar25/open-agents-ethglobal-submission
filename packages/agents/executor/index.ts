@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { createBaseAgent } from '@neuralmesh/agent-shared'
+import { createBaseAgent, startHealthServer } from '@neuralmesh/agent-shared'
 import { config } from './config.js'
 import { startExecutor } from './executor.js'
 
@@ -13,6 +13,7 @@ async function main() {
     axlKeyPath: config.axlKeyPath,
   })
   console.log(`[executor] Started. ENS: ${config.ensName} | AXL: :${config.axlApiPort}`)
+  startHealthServer(config.ensName, config.axlApiPort)
   await startExecutor(agent)
 }
 

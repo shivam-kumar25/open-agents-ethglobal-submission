@@ -1,7 +1,7 @@
 {
   "id": "neuralmesh-onchain-executor",
   "name": "NeuralMesh Onchain Executor",
-  "description": "Executes onchain actions for NeuralMesh agents with MEV protection, retry logic, and full audit trail. Routes agent execution requests through KeeperHub for guaranteed delivery.",
+  "description": "Executes onchain actions for NeuralMesh agents on Sepolia — primarily ENS text record writes via NeuralMeshResolver. Routes agent execution requests through KeeperHub for guaranteed delivery with retry logic and full audit trail.",
   "version": "1.0.0",
   "trigger": {
     "type": "Webhook",
@@ -14,7 +14,7 @@
   "inputs": {
     "contractAddress": {
       "type": "string",
-      "description": "Target contract address (0x-prefixed)",
+      "description": "Target contract address on Sepolia (0x-prefixed)",
       "required": true
     },
     "method": {
@@ -50,12 +50,12 @@
     {
       "id": "simulate-tx",
       "type": "EVMSimulate",
-      "label": "Simulate Transaction",
+      "label": "Simulate Transaction on Sepolia",
       "dependsOn": ["validate-input"],
       "config": {
-        "network": "0G Galileo",
-        "chainId": 16602,
-        "rpcUrl": "https://evmrpc-testnet.0g.ai",
+        "network": "Ethereum Sepolia",
+        "chainId": 11155111,
+        "rpcUrl": "{{env.SEPOLIA_RPC_URL}}",
         "contractAddress": "{{@trigger:Trigger.contractAddress}}",
         "method": "{{@trigger:Trigger.method}}",
         "args": "{{@trigger:Trigger.args}}"
@@ -64,12 +64,12 @@
     {
       "id": "execute-tx",
       "type": "EVMTransaction",
-      "label": "Execute with MEV Protection",
+      "label": "Execute on Sepolia with Retry",
       "dependsOn": ["simulate-tx"],
       "config": {
-        "network": "0G Galileo",
-        "chainId": 16602,
-        "rpcUrl": "https://evmrpc-testnet.0g.ai",
+        "network": "Ethereum Sepolia",
+        "chainId": 11155111,
+        "rpcUrl": "{{env.SEPOLIA_RPC_URL}}",
         "wallet": "{{@trigger:Trigger.agentWallet}}",
         "contractAddress": "{{@trigger:Trigger.contractAddress}}",
         "method": "{{@trigger:Trigger.method}}",

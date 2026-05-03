@@ -1,7 +1,7 @@
 {
   "id": "neuralmesh-evolution-trigger",
   "name": "NeuralMesh Evolution Trigger",
-  "description": "Triggers 0G fine-tuning for a NeuralMesh agent when training threshold is reached. Monitors the full 9-state lifecycle and ensures model is acknowledged within 48h of delivery.",
+  "description": "Triggers an evolution cycle for a NeuralMesh agent when the training buffer threshold is reached. Notifies the evolution agent via AXL, bumps the ENS neural-version text record, and broadcasts the event to the mesh.",
   "version": "1.0.0",
   "trigger": {
     "type": "Webhook",
@@ -16,57 +16,46 @@
       "description": "ENS name of the agent to evolve (e.g. researcher.neuralmesh.eth)",
       "required": true
     },
-    "datasetRoot": {
-      "type": "string",
-      "description": "0G Storage Merkle root hash of the JSONL training dataset",
+    "taskCount": {
+      "type": "number",
+      "description": "Number of completed tasks that triggered this evolution",
       "required": true
     },
-    "baseModel": {
+    "evolutionPubkey": {
       "type": "string",
-      "description": "Base model to fine-tune",
-      "default": "Qwen2.5-0.5B-Instruct"
+      "description": "AXL public key of the evolution agent. Get it from: curl http://localhost:9042/api/self | jq .pubkey",
+      "required": true
     },
-    "provider": {
+    "fromVersion": {
       "type": "string",
-      "description": "0G fine-tuning provider address",
+      "description": "Current neural-version value from ENS",
       "required": true
     }
   },
   "nodes": [
     {
-      "id": "verify-dataset",
+      "id": "notify-evolution-agent",
       "type": "HttpRequest",
-      "label": "Verify Dataset in 0G Storage",
-      "config": {
-        "url": "https://indexer-storage-testnet-standard.0g.ai/file/exists/{{@trigger:Trigger.datasetRoot}}",
-        "method": "GET"
-      }
-    },
-    {
-      "id": "submit-finetune",
-      "type": "Code",
-      "label": "Submit 0G Fine-tuning Job",
-      "dependsOn": ["verify-dataset"],
-      "config": {
-        "code": "if (!{{@verify-dataset:HttpRequest.success}}) throw new Error('Dataset not found in 0G Storage'); return { submitted: true, jobId: 'pending', agentName: '{{@trigger:Trigger.agentName}}', datasetRoot: '{{@trigger:Trigger.datasetRoot}}' };"
-      }
-    },
-    {
-      "id": "notify-agent",
-      "type": "HttpRequest",
-      "label": "Notify Evolution Agent",
-      "dependsOn": ["submit-finetune"],
+      "label": "Notify Evolution Agent via AXL",
       "config": {
         "url": "http://127.0.0.1:9042/api/send",
         "method": "POST",
         "headers": { "Content-Type": "application/json" },
-        "body": "{\"dst\": \"evolution-pubkey\", \"payload\": \"{\\\"service\\\":\\\"trigger-evolution\\\",\\\"request\\\":{\\\"agentName\\\":\\\"{{@trigger:Trigger.agentName}}\\\",\\\"datasetRoot\\\":\\\"{{@trigger:Trigger.datasetRoot}}\\\"},\\\"requestId\\\":\\\"kh-{{@trigger:Trigger.timestamp}}\\\"}\"}"
+        "body": "{\"dst\": \"{{@trigger:Trigger.evolutionPubkey}}\", \"payload\": \"{\\\"service\\\":\\\"trigger-evolution\\\",\\\"request\\\":{\\\"agentName\\\":\\\"{{@trigger:Trigger.agentName}}\\\",\\\"taskCount\\\":{{@trigger:Trigger.taskCount}},\\\"fromVersion\\\":\\\"{{@trigger:Trigger.fromVersion}}\\\"},\\\"requestId\\\":\\\"kh-{{@trigger:Trigger.taskCount}}\\\"}\"}"
+      }
+    },
+    {
+      "id": "build-event",
+      "type": "Code",
+      "label": "Build Evolution Event",
+      "dependsOn": ["notify-evolution-agent"],
+      "config": {
+        "code": "return { agentName: '{{@trigger:Trigger.agentName}}', taskCount: {{@trigger:Trigger.taskCount}}, fromVersion: '{{@trigger:Trigger.fromVersion}}', triggeredAt: Date.now(), notified: {{@notify-evolution-agent:HttpRequest.success}} };"
       }
     }
   ],
   "outputs": {
-    "submitted": "{{@submit-finetune:Code.output.submitted}}",
     "agentName": "{{@trigger:Trigger.agentName}}",
-    "datasetRoot": "{{@trigger:Trigger.datasetRoot}}"
+    "event": "{{@build-event:Code.output}}"
   }
 }

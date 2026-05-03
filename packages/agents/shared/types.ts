@@ -29,7 +29,5 @@ export interface EvolutionAnnouncement {
   agentName: string
   fromVersion: string
   toVersion: string
-  loraRoot: string
-  inftTokenId: number
   timestamp: number
 }

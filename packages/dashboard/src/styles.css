@@ -3,17 +3,38 @@
 @tailwind utilities;
 
 body {
-  background-color: #030712;
+  background-color: #FAFAF8;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #0A0A0A;
 }
 
-::-webkit-scrollbar {
-  width: 4px;
+* { box-sizing: border-box; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #F0EFE8; }
+::-webkit-scrollbar-thumb { background: #000; border-radius: 0; }
+
+@keyframes nm-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.55; transform: scale(1.25); }
 }
-::-webkit-scrollbar-track {
-  background: #111827;
+
+@keyframes nm-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
-::-webkit-scrollbar-thumb {
-  background: #374151;
-  border-radius: 2px;
+
+@keyframes nm-spin {
+  from { transform: rotateX(58deg) rotateZ(0deg); }
+  to   { transform: rotateX(58deg) rotateZ(360deg); }
+}
+
+@keyframes nm-shimmer {
+  0%, 100% { background-color: #E8E8E0; }
+  50%       { background-color: #D4D4CC; }
+}
+
+@keyframes nm-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

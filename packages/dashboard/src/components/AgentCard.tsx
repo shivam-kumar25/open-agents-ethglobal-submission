@@ -50,7 +50,7 @@ export function AgentCard({
         </div>
         <div>
           <span className="text-gray-500">Earnings</span>
-          <div className="font-mono font-bold text-emerald-400">${earnings} USDC</div>
+          <div className="font-mono font-bold text-emerald-400">{earnings}</div>
         </div>
         <div>
           <span className="text-gray-500">iNFT</span>
